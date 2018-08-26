@@ -55,7 +55,7 @@ public class SuiteExecutionReport extends ExecutionReport {
   }
 
   private boolean allReferencesEqual(List<PageHistoryReference> r1, List<PageHistoryReference> r2) {
-    for (int i=0; i<r1.size(); i++) {
+    for (int i = 0; i < r1.size(); i++) {
       if (!r1.get(i).equals(r2.get(i)))
         return false;
     }
@@ -89,9 +89,9 @@ public class SuiteExecutionReport extends ExecutionReport {
   @Override
   protected void unpackResults(Element testResults) throws InvalidReportException {
     NodeList references = testResults.getElementsByTagName("pageHistoryReference");
-    for (int referenceIndex = 0;referenceIndex < references.getLength();referenceIndex++){
+    for (int referenceIndex = 0; referenceIndex < references.getLength(); referenceIndex++) {
       Element refElement = (Element) references.item(referenceIndex);
-      String name = XmlUtil.getTextValue(refElement,"name");
+      String name = XmlUtil.getTextValue(refElement, "name");
       long time = 0;
       String dateString = XmlUtil.getTextValue(refElement, "date");
       try {
@@ -100,14 +100,14 @@ public class SuiteExecutionReport extends ExecutionReport {
         throw new InvalidReportException(format("'%s' is not a valid date", dateString), e);
       }
       long runTimeInMillis = getRunTimeInMillisOrZeroIfNotPresent(refElement);
-      PageHistoryReference r1 = new PageHistoryReference(name,time,runTimeInMillis);
-      Element counts = XmlUtil.getElementByTagName(refElement,"counts");
+      PageHistoryReference r1 = new PageHistoryReference(name, time, runTimeInMillis);
+      Element counts = XmlUtil.getElementByTagName(refElement, "counts");
 
       r1.setTestSummary(new TestSummary(
-              Integer.valueOf(XmlUtil.getTextValue(counts, "right")),
-              Integer.valueOf(XmlUtil.getTextValue(counts, "wrong")),
-              Integer.valueOf(XmlUtil.getTextValue(counts, "ignores")),
-              Integer.valueOf(XmlUtil.getTextValue(counts, "exceptions"))));
+        Integer.valueOf(XmlUtil.getTextValue(counts, "right")),
+        Integer.valueOf(XmlUtil.getTextValue(counts, "wrong")),
+        Integer.valueOf(XmlUtil.getTextValue(counts, "ignores")),
+        Integer.valueOf(XmlUtil.getTextValue(counts, "exceptions"))));
       pageHistoryReferences.add(r1);
     }
   }
@@ -127,6 +127,7 @@ public class SuiteExecutionReport extends ExecutionReport {
 
   public static class PageHistoryReference {
     private String pageName;
+    private String help = "null";//added by hch
     private long time;
     private long runTimeInMillis;
     private TestSummary testSummary = new TestSummary();
@@ -148,7 +149,7 @@ public class SuiteExecutionReport extends ExecutionReport {
 
     @Override
     public boolean equals(Object o) {
-      if (! (o instanceof PageHistoryReference))
+      if (!(o instanceof PageHistoryReference))
         return false;
       PageHistoryReference r = (PageHistoryReference) o;
       return StringUtils.equals(pageName, r.pageName) &&
@@ -164,6 +165,14 @@ public class SuiteExecutionReport extends ExecutionReport {
 
     public String getPageName() {
       return pageName;
+    }
+
+    public String getHelp() {
+      return help;
+    }
+
+    public void setHelp(String help) {
+      this.help = help;
     }
 
     public String getRelativePageName() {

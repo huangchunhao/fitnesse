@@ -24,7 +24,9 @@ public class Request {
 
   private static final Collection<String> allowedMethods = buildAllowedMethodList();
 
-  /** input key to suppress chunking. */
+  /**
+   * input key to suppress chunking.
+   */
   public static final String NOCHUNK = "nochunk";
 
   protected StreamReader input;
@@ -39,6 +41,7 @@ public class Request {
   protected String requestLine;
   protected String authorizationUsername;
   protected String authorizationPassword;
+  public String opt;//added by hch
   private volatile boolean hasBeenParsed;
   private long bytesParsed = 0;
 
@@ -54,6 +57,14 @@ public class Request {
 
   public Request(InputStream input) {
     this.input = new StreamReader(new BufferedInputStream(input));
+  }
+
+  public String getOpt() {
+    return opt;
+  }
+
+  public void setOpt(String opt) {
+    this.opt = opt;
   }
 
   public void parse() throws HttpException {
@@ -139,7 +150,7 @@ public class Request {
   }
 
   private UploadedFile createUploadedFile(Map<String, String> headers,
-      StreamReader reader, String boundary) throws IOException {
+                                          StreamReader reader, String boundary) throws IOException {
     String filename = headers.get("filename");
     String contentType = headers.get("content-type");
     File tempFile = File.createTempFile("FitNesse", ".uploadedFile");
@@ -157,10 +168,10 @@ public class Request {
   private void checkRequestLine(Matcher match) throws HttpException {
     if (!match.find())
       throw new HttpException(
-      "The request string is malformed and can not be parsed");
+        "The request string is malformed and can not be parsed");
     if (!allowedMethods.contains(match.group(1)))
       throw new HttpException("The " + match.group(1)
-          + " method is not currently supported");
+        + " method is not currently supported");
   }
 
   public void parseRequestUri(String requestUri) {
@@ -223,7 +234,7 @@ public class Request {
     return inputs.get(key);
   }
 
-  public Map<String, String> getMap(){
+  public Map<String, String> getMap() {
     return inputs;
   }
 
@@ -275,13 +286,13 @@ public class Request {
     if (map.isEmpty()) {
       buffer.append("\tempty");
     }
-    for (Entry<String, String> entry: map.entrySet()) {
+    for (Entry<String, String> entry : map.entrySet()) {
       String value = entry.getValue() == null ? null : escape(entry.getValue());
       buffer.append("\t")
-              .append(escape(entry.getKey()))
-              .append(" \t-->\t ")
-              .append(value)
-              .append("\n");
+        .append(escape(entry.getKey()))
+        .append(" \t-->\t ")
+        .append(value)
+        .append("\n");
     }
   }
 

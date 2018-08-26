@@ -2,16 +2,6 @@
 // Released under the terms of the CPL Common Public License version 1.0.
 package fitnesse.responders.run;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.Writer;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import fitnesse.FitNesseContext;
 import fitnesse.authentication.SecureOperation;
 import fitnesse.authentication.SecureResponder;
@@ -21,41 +11,28 @@ import fitnesse.html.template.HtmlPage;
 import fitnesse.html.template.PageTitle;
 import fitnesse.http.Request;
 import fitnesse.http.Response;
-import fitnesse.reporting.BaseFormatter;
-import fitnesse.reporting.Formatter;
-import fitnesse.reporting.InteractiveFormatter;
-import fitnesse.reporting.SuiteHtmlFormatter;
-import fitnesse.reporting.TestTextFormatter;
-import fitnesse.reporting.history.HistoryPurger;
-import fitnesse.reporting.history.JunitReFormatter;
-import fitnesse.reporting.history.PageHistory;
-import fitnesse.reporting.history.SuiteHistoryFormatter;
-import fitnesse.reporting.history.SuiteXmlReformatter;
-import fitnesse.reporting.history.TestXmlFormatter;
-import fitnesse.responders.ChunkingResponder;
-import fitnesse.responders.WikiImporter;
-import fitnesse.responders.WikiImportingResponder;
-import fitnesse.responders.WikiImportingTraverser;
-import fitnesse.responders.WikiPageActions;
-import fitnesse.testrunner.MultipleTestsRunner;
-import fitnesse.testrunner.PagesByTestSystem;
-import fitnesse.testrunner.RunningTestingTracker;
-import fitnesse.testrunner.SuiteContentsFinder;
-import fitnesse.testrunner.SuiteFilter;
+import fitnesse.reporting.*;
+import fitnesse.reporting.history.*;
+import fitnesse.responders.*;
+import fitnesse.testrunner.*;
 import fitnesse.testsystems.ConsoleExecutionLogListener;
 import fitnesse.testsystems.ExecutionLogListener;
 import fitnesse.testsystems.TestExecutionException;
 import fitnesse.testsystems.TestSummary;
-import fitnesse.wiki.PageCrawler;
-import fitnesse.wiki.PageData;
-import fitnesse.wiki.PageType;
-import fitnesse.wiki.PathParser;
-import fitnesse.wiki.WikiImportProperty;
-import fitnesse.wiki.WikiPage;
-import fitnesse.wiki.WikiPagePath;
-import fitnesse.wiki.WikiPageUtil;
+import fitnesse.wiki.*;
+import fitnesseMain.HCHContext;
 import org.apache.commons.lang.StringUtils;
 import util.FileUtil;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.Writer;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import static fitnesse.responders.WikiImportingTraverser.ImportError;
 import static fitnesse.wiki.WikiImportProperty.isAutoUpdated;
@@ -265,6 +242,8 @@ public class SuiteResponder extends ChunkingResponder implements SecureResponder
       mainFormatter = newTextFormatter();
     } else if (response.isJunitFormat()) {
       mainFormatter = newJunitFormatter();
+    } else if (response.isJsonFormat()) {
+      mainFormatter = newJsonFormatter();
     } else {
       mainFormatter = newHtmlFormatter();
     }
@@ -295,12 +274,24 @@ public class SuiteResponder extends ChunkingResponder implements SecureResponder
     return new JunitReFormatter(context, page, response.getWriter(), getSuiteHistoryFormatter());
   }
 
+  protected BaseFormatter newJsonFormatter() {
+    return new JsonReFormatter(context, page, response.getWriter(), getSuiteHistoryFormatter());
+  }
   protected BaseFormatter newHtmlFormatter() {
     return new SuiteHtmlFormatter(page, response.getWriter());
   }
 
   protected void performExecution() throws TestExecutionException {
-    MultipleTestsRunner runner = newMultipleTestsRunner(getPagesToRun());
+    List<WikiPage> wikiPagelist = getPagesToRun();//added by hch
+    //Map<String,String> nameAndHelp =  new HashMap<String,String>();
+    for(WikiPage wp:wikiPagelist){//added by hch
+      String help=wp.getData().getAttribute("Help");//added by hch
+      String name= wp.getName();//added by hch
+      HCHContext.getInstance().nameAndHelp.put(name, help);//added by hch
+    }
+    //LOG.log(Level.INFO, nameAndHelp.toString());//added by hch
+    MultipleTestsRunner runner = newMultipleTestsRunner(wikiPagelist);
+    //MultipleTestsRunner runner = newMultipleTestsRunner(getPagesToRun());
     runningTestingTracker.addStartedProcess(testRunId, runner);
     if (isInteractive()) {
       ((InteractiveFormatter) mainFormatter).setTrackingId(testRunId);

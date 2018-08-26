@@ -2,6 +2,8 @@
 // Released under the terms of the CPL Common Public License version 1.0.
 package fitnesse.http;
 
+import util.FileUtil;
+
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.text.SimpleDateFormat;
@@ -10,8 +12,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TimeZone;
-
-import util.FileUtil;
 
 public abstract class Response {
   public enum Format {
@@ -59,6 +59,8 @@ public abstract class Response {
       format = Format.JUNIT;
     } else if ("text".equalsIgnoreCase(formatString)) {
       format = Format.TEXT;
+    } else if ("json".equalsIgnoreCase(formatString)) {
+      format = Format.JSON;
     } else {
       format = Format.HTML;
     }
@@ -83,7 +85,11 @@ public abstract class Response {
   }
 
   public boolean isJunitFormat() {
-	    return Format.JUNIT.contentType.equals(contentType);
+    return Format.JUNIT.contentType.equals(contentType);
+  }
+
+  public boolean isJsonFormat() {
+    return Format.JSON.contentType.equals(contentType);
   }
 
   public boolean hasContent() {
@@ -173,7 +179,7 @@ public abstract class Response {
   }
 
   void makeHeaders(StringBuffer text) {
-    for (Entry<String, String> entry: headers.entrySet()) {
+    for (Entry<String, String> entry : headers.entrySet()) {
       text.append(entry.getKey()).append(": ").append(entry.getValue()).append(CRLF);
     }
   }

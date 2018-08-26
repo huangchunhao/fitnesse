@@ -1,13 +1,5 @@
 package fitnesse.reporting.history;
 
-import java.io.Closeable;
-import java.io.IOException;
-import java.io.Writer;
-import java.util.List;
-import org.apache.velocity.Template;
-import org.apache.velocity.VelocityContext;
-import org.apache.velocity.app.VelocityEngine;
-
 import fitnesse.FitNesseContext;
 import fitnesse.reporting.BaseFormatter;
 import fitnesse.testrunner.WikiTestPageUtil;
@@ -15,7 +7,18 @@ import fitnesse.testsystems.*;
 import fitnesse.util.TimeMeasurement;
 import fitnesse.wiki.PageType;
 import fitnesse.wiki.WikiPage;
+import fitnesseMain.HCHContext;
+import org.apache.velocity.Template;
+import org.apache.velocity.VelocityContext;
+import org.apache.velocity.app.VelocityEngine;
 import util.FileUtil;
+import fitnesse.reporting.history.SuiteExecutionReport.PageHistoryReference;
+
+import java.io.Closeable;
+import java.io.IOException;
+import java.io.Writer;
+import java.util.List;
+import java.util.Map;
 
 public class SuiteHistoryFormatter extends BaseFormatter implements ExecutionLogListener, Closeable {
   private final SuiteExecutionReport suiteExecutionReport;
@@ -130,6 +133,7 @@ public class SuiteHistoryFormatter extends BaseFormatter implements ExecutionLog
   }
 
   public SuiteExecutionReport getSuiteExecutionReport() {
+    addHelp();//added by hch
     return suiteExecutionReport;
   }
 
@@ -171,5 +175,23 @@ public class SuiteHistoryFormatter extends BaseFormatter implements ExecutionLog
     if (testHistoryFormatter != null) {
       testHistoryFormatter.exceptionOccurred(e);
     }
+  }
+
+  //added by hch
+  public void addHelp() {
+    Map<String, String> nameAndHelp = HCHContext.getInstance().nameAndHelp;//added by hch
+    for (PageHistoryReference reference : getPageHistoryReferences()) {
+      String path = reference.getPageName();
+      String[] nodes = path.split("\\.");
+      String name = nodes[nodes.length - 1];
+      String help;
+      if (nameAndHelp.containsKey(name)) {
+        help = nameAndHelp.get(name);
+      } else {
+        help = "null";
+      }
+      reference.setHelp(help);
+    }
+
   }
 }

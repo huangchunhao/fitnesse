@@ -133,7 +133,9 @@ public class FileUtil {
     String line;
     try {
       while ((line = reader.readLine()) != null)
-        lines.add(line);
+        if(!line.startsWith("#")){//added by huangchunhao
+          lines.add(line);
+        }
     } finally {
       close(reader);
     }

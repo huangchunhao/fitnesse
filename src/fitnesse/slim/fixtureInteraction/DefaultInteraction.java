@@ -84,7 +84,7 @@ public class DefaultInteraction implements FixtureInteraction {
     Constructor<?> defaultConstructor = null;
     Constructor<?> constructorSelectedByType = null;
     int diffCounter = 0;
-    
+
     for (Constructor<?> constructor : clazz.getConstructors()) {
       int currentDiffCounter;
       Class<?>[] constructorArgs = constructor.getParameterTypes();
@@ -92,7 +92,7 @@ public class DefaultInteraction implements FixtureInteraction {
         if (defaultConstructor == null) {
           defaultConstructor = constructor;
         }
-        
+
         final Object[] convertedArgs = getConvertedConstructorArgsTypes(constructor, args);
         final boolean matchedConstructorArgsTypes = hasConstructorArgsTypes(constructorArgs, convertedArgs);
         if (matchedConstructorArgsTypes) {
@@ -116,7 +116,7 @@ public class DefaultInteraction implements FixtureInteraction {
       if (convertedArgs[i] == null) {
         continue;
       }
-      
+
       Class<?> classArg = constructorArgs[i];
       Class<?> classInputArg = convertedArgs[i].getClass();
       if (!constructorArgs[i].isAssignableFrom(convertedArgs[i].getClass())) {
@@ -175,6 +175,9 @@ public class DefaultInteraction implements FixtureInteraction {
     int nArgs = args.length;
     for (Method method : methods) {
       boolean hasMatchingName = method.getName().equals(methodName);
+      if(hasMatchingName && method.isVarArgs()){//add by hch20170307
+        return method;//add by hch20170307
+      }//add by hch20170307
       boolean hasMatchingArguments = method.getParameterTypes().length == nArgs;
       if (hasMatchingName && hasMatchingArguments) {
         return method;
@@ -190,10 +193,21 @@ public class DefaultInteraction implements FixtureInteraction {
     return new MethodExecutionResult(retval, retType);
   }
 
+  //modified by hch 20170307
   protected Object[] convertArgs(Method method, Object[] args) {
-    Type[] argumentParameterTypes = method.getGenericParameterTypes();
+    Type[] argumentParameterTypes=null;
+    if(method.isVarArgs()){
+      return args;
+    }else{
+      argumentParameterTypes = method.getGenericParameterTypes();
+    }
     return ConverterSupport.convertArgs(args, argumentParameterTypes);
   }
+
+	/*protected Object[] convertArgs(Method method, Object[] args) {
+		Type[] argumentParameterTypes = method.getGenericParameterTypes();
+		return ConverterSupport.convertArgs(args, argumentParameterTypes);
+	}*/
 
   protected Object callMethod(Object instance, Method method, Object[] convertedArgs) throws Throwable {
     try {
@@ -215,10 +229,21 @@ public class DefaultInteraction implements FixtureInteraction {
     }
   }
 
+  // modified by hch 20170307
   @Override
   public Object methodInvoke(Method method, Object instance, Object... convertedArgs) throws Throwable {
     try {
-      return method.invoke(instance, convertedArgs);
+      if (method.isVarArgs()) {
+        String[] s = new String[convertedArgs.length];
+        int i = 0;
+        for (Object arg : convertedArgs) {
+          s[i] = arg.toString();
+          i++;
+        }
+        return method.invoke(instance, (Object) s);
+      } else {
+        return method.invoke(instance, convertedArgs);
+      }
     } catch (InvocationTargetException e) {
       if (e.getCause() != null) {
         throw e.getCause();
@@ -227,9 +252,25 @@ public class DefaultInteraction implements FixtureInteraction {
       }
     } catch (IllegalArgumentException e) {
       throw new RuntimeException("Bad call of: " + method.getDeclaringClass().getName() + "." + method.getName()
-              + ". On instance of: " + instance.getClass().getName(), e);
+        + ". On instance of: " + instance.getClass().getName(), e);
     }
   }
+
+  /*@Override
+	public Object methodInvoke(Method method, Object instance, Object... convertedArgs) throws Throwable {
+		try {
+			return method.invoke(instance, convertedArgs);
+		} catch (InvocationTargetException e) {
+			if (e.getCause() != null) {
+				throw e.getCause();
+			} else {
+				throw e.getTargetException();
+			}
+		} catch (IllegalArgumentException e) {
+		  throw new RuntimeException("Bad call of: " + method.getDeclaringClass().getName() + "." + method.getName()
+                                  + ". On instance of: " + instance.getClass().getName(), e);
+    }
+	}*/
 
   private int getConstructorArgsConvertionDiff(Object[] args, Object[] convertedArgs) {
     int diffCounter = 0;

@@ -2,30 +2,26 @@
 // Released under the terms of the CPL Common Public License version 1.0.
 package fitnesse.responders.refactoring;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import fitnesse.FitNesseContext;
-import fitnesse.authentication.AlwaysSecureOperation;
 import fitnesse.authentication.SecureOperation;
 import fitnesse.authentication.SecureResponder;
+import fitnesse.authentication.SecureWriteOperation;
 import fitnesse.components.TraversalListener;
 import fitnesse.html.template.HtmlPage;
 import fitnesse.html.template.PageTitle;
 import fitnesse.http.Request;
 import fitnesse.http.Response;
 import fitnesse.http.SimpleResponse;
-import fitnesse.wiki.NoPruningStrategy;
-import fitnesse.wiki.PageData;
-import fitnesse.wiki.PathParser;
-import fitnesse.wiki.WikiPage;
-import fitnesse.wiki.WikiPagePath;
-import fitnesse.wiki.WikiPageProperty;
+import fitnesse.wiki.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class RefactorPageResponder implements SecureResponder {
 
   @Override
   public Response makeResponse(FitNesseContext context, Request request) throws Exception {
+    request.setOpt("refactor");
     String resource = request.getResource();
 
     String tags = "";
@@ -78,6 +74,7 @@ public class RefactorPageResponder implements SecureResponder {
 
   @Override
   public SecureOperation getSecureOperation() {
-    return new AlwaysSecureOperation();
+    return new SecureWriteOperation();//added by hch
+    //return new AlwaysSecureOperation();
   }
 }
